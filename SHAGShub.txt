@@ -1,0 +1,208 @@
+
+--========================================
+--             SHAGS MOD MENU
+--                 VERSION 1.0
+--========================================
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+-- CONFIGURATION
+local LOGO_ID = "104457688401830"
+local OPEN_KEY = Enum.KeyCode.RightShift
+
+-- CURSOR LIBRARY
+local cursors = {
+    {
+        Name = "Diamond Sword",
+        ID = "99371372225483"
+    },
+    {
+        Name = "White Cross",
+        ID = "94056530967449"
+    }
+}
+
+-- SAVE ORIGINAL CURSOR
+local originalCursor = mouse.Icon
+
+--========================================
+-- GUI
+--========================================
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "SHAGS_CursorMenu"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- MAIN FRAME
+local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
+frame.Size = UDim2.fromOffset(300, 350)
+frame.Position = UDim2.new(0.5, -150, 0.5, -175)
+frame.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14)
+frameCorner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(75, 75, 75)
+stroke.Thickness = 1.3
+stroke.Parent = frame
+
+--========================================
+-- SHAGS LOGO
+--========================================
+
+local logo = Instance.new("ImageLabel")
+logo.Name = "SHAGS_Logo"
+logo.Size = UDim2.fromOffset(110, 75)
+logo.Position = UDim2.new(0.5, -55, 0, 8)
+logo.BackgroundTransparency = 1
+logo.Image = "rbxassetid://" .. LOGO_ID
+logo.ScaleType = Enum.ScaleType.Fit
+logo.Parent = frame
+
+-- TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 25)
+title.Position = UDim2.new(0, 0, 0, 83)
+title.BackgroundTransparency = 1
+title.Text = "CURSOR MOD MENU"
+title.TextColor3 = Color3.fromRGB(230, 230, 230)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.Parent = frame
+
+-- SUBTITLE
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 18)
+subtitle.Position = UDim2.new(0, 0, 0, 108)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "CUSTOMIZE YOUR CURSOR"
+subtitle.TextColor3 = Color3.fromRGB(120, 120, 120)
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 10
+subtitle.Parent = frame
+
+--========================================
+-- BUTTON CREATION
+--========================================
+
+local function createButton(name, position, color)
+
+    local button = Instance.new("TextButton")
+
+    button.Size = UDim2.new(1, -30, 0, 42)
+    button.Position = UDim2.new(0, 15, 0, position)
+
+    button.BackgroundColor3 = color
+    button.BorderSizePixel = 0
+
+    button.Text = name
+    button.TextColor3 = Color3.fromRGB(245, 245, 245)
+
+    button.Font = Enum.Font.GothamMedium
+    button.TextSize = 13
+
+    button.AutoButtonColor = true
+    button.Parent = frame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+
+    return button
+end
+
+--========================================
+-- CURSOR SELECTION
+--========================================
+
+local status = Instance.new("TextLabel")
+
+status.Size = UDim2.new(1, -30, 0, 20)
+status.Position = UDim2.new(0, 15, 0, 155)
+status.BackgroundTransparency = 1
+status.Text = "SELECT A CURSOR"
+status.TextColor3 = Color3.fromRGB(150, 150, 150)
+status.Font = Enum.Font.Gotham
+status.TextSize = 10
+status.Parent = frame
+
+for i, cursor in ipairs(cursors) do
+
+    local button = createButton(
+        cursor.Name,
+        180 + ((i - 1) * 48),
+        Color3.fromRGB(37, 37, 37)
+    )
+
+    button.MouseButton1Click:Connect(function()
+
+        mouse.Icon = "rbxassetid://" .. cursor.ID
+
+        status.Text = "ACTIVE: " .. cursor.Name
+        status.TextColor3 = Color3.fromRGB(220, 220, 220)
+
+    end)
+end
+
+--========================================
+-- RESTORE ORIGINAL CURSOR
+--========================================
+
+local restore = createButton(
+    "RESTORE ORIGINAL CURSOR",
+    280,
+    Color3.fromRGB(65, 65, 65)
+)
+
+restore.MouseButton1Click:Connect(function()
+
+    mouse.Icon = originalCursor
+
+    status.Text = "ORIGINAL CURSOR RESTORED"
+    status.TextColor3 = Color3.fromRGB(180, 180, 180)
+
+end)
+
+--========================================
+-- CLOSE MENU
+--========================================
+
+local close = createButton(
+    "CLOSE MENU",
+    325,
+    Color3.fromRGB(95, 35, 35)
+)
+
+close.MouseButton1Click:Connect(function()
+    frame.Visible = false
+end)
+
+--========================================
+-- RIGHT SHIFT TOGGLE
+--========================================
+
+UserInputService.InputBegan:Connect(function(input, processed)
+
+    if processed then return end
+
+    if input.KeyCode == OPEN_KEY then
+        frame.Visible = not frame.Visible
+    end
+
+end)
+
+--========================================
+-- END OF SHAGS MOD MENU
+--========================================
