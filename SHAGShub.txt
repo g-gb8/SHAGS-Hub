@@ -1,5 +1,5 @@
+
 -- SHAGS | Cursor Hub
--- LocalScript em StarterPlayer > StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -8,31 +8,35 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- IDs dos assets
+-- ASSETS
 local LOGO_ID = "rbxassetid://104457688401830"
 local SWORD_ID = "rbxassetid://99371372225483"
 local CROSS_ID = "rbxassetid://94056530967449"
 
--- Estado
+-- CONFIGURAÇÕES
+local cursorSize = 34
+local MIN_SIZE = 12
+local MAX_SIZE = 100
+local SIZE_STEP = 4
+
 local selectedCursor = nil
 local menuOpen = true
-local centerLocked = false
 
 local originalMouseIconEnabled = UIS.MouseIconEnabled
 local originalMouseBehavior = UIS.MouseBehavior
 
--- GUI
+-- GUI PRINCIPAL
 local gui = Instance.new("ScreenGui")
 gui.Name = "SHAGS_Hub"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.Parent = playerGui
 
--- Janela principal
+-- JANELA
 local main = Instance.new("Frame")
 main.Name = "Main"
-main.Size = UDim2.fromOffset(330, 300)
-main.Position = UDim2.new(0.5, -165, 0.5, -150)
+main.Size = UDim2.fromOffset(330, 350)
+main.Position = UDim2.new(0.5, -165, 0.5, -175)
 main.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 main.BorderSizePixel = 0
 main.Parent = gui
@@ -41,12 +45,12 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 12)
 mainCorner.Parent = main
 
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(75, 75, 75)
-mainStroke.Thickness = 1.5
-mainStroke.Parent = main
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(75, 75, 75)
+stroke.Thickness = 1.5
+stroke.Parent = main
 
--- Barra superior
+-- BARRA SUPERIOR
 local top = Instance.new("Frame")
 top.Size = UDim2.new(1, 0, 0, 65)
 top.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
@@ -65,7 +69,7 @@ logo.Image = LOGO_ID
 logo.Parent = top
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -75, 1, 0)
+title.Size = UDim2.new(1, -125, 1, 0)
 title.Position = UDim2.fromOffset(68, 0)
 title.BackgroundTransparency = 1
 title.Text = "SHAGS"
@@ -75,7 +79,22 @@ title.TextSize = 23
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = top
 
--- Arrastar janela pela barra superior
+-- BOTÃO FECHAR
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.fromOffset(34, 34)
+closeButton.Position = UDim2.new(1, -45, 0, 15)
+closeButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 16
+closeButton.Parent = top
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = closeButton
+
+-- ARRASTAR MENU
 local dragging = false
 local dragStart
 local startPosition
@@ -83,6 +102,7 @@ local startPosition
 top.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
+
         dragging = true
         dragStart = input.Position
         startPosition = main.Position
@@ -94,7 +114,9 @@ UIS.InputChanged:Connect(function(input)
         input.UserInputType == Enum.UserInputType.MouseMovement
         or input.UserInputType == Enum.UserInputType.Touch
     ) then
+
         local delta = input.Position - dragStart
+
         main.Position = UDim2.new(
             startPosition.X.Scale,
             startPosition.X.Offset + delta.X,
@@ -107,11 +129,41 @@ end)
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
+
         dragging = false
     end
 end)
 
--- Texto de seleção
+-- CURSOR VISUAL
+local cursor = Instance.new("ImageLabel")
+cursor.Name = "CustomCursor"
+cursor.Size = UDim2.fromOffset(cursorSize, cursorSize)
+cursor.AnchorPoint = Vector2.new(0.5, 0.5)
+cursor.Position = UDim2.fromScale(0.5, 0.5)
+cursor.BackgroundTransparency = 1
+cursor.Visible = false
+cursor.ZIndex = 100
+cursor.Parent = gui
+
+-- ATUALIZAR MODO DO CURSOR
+local function updateCursorMode()
+    if selectedCursor then
+        cursor.Visible = not menuOpen
+        UIS.MouseIconEnabled = menuOpen and true or false
+
+        if menuOpen then
+            UIS.MouseBehavior = Enum.MouseBehavior.Default
+        else
+            UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+        end
+    else
+        cursor.Visible = false
+        UIS.MouseIconEnabled = originalMouseIconEnabled
+        UIS.MouseBehavior = originalMouseBehavior
+    end
+end
+
+-- TEXTO DE SELEÇÃO
 local subtitle = Instance.new("TextLabel")
 subtitle.Size = UDim2.new(1, -30, 0, 28)
 subtitle.Position = UDim2.fromOffset(15, 78)
@@ -123,18 +175,7 @@ subtitle.TextSize = 13
 subtitle.TextXAlignment = Enum.TextXAlignment.Left
 subtitle.Parent = main
 
--- Cursor visual fixo no centro
-local cursor = Instance.new("ImageLabel")
-cursor.Name = "CustomCursor"
-cursor.Size = UDim2.fromOffset(34, 34)
-cursor.AnchorPoint = Vector2.new(0.5, 0.5)
-cursor.Position = UDim2.fromScale(0.5, 0.5)
-cursor.BackgroundTransparency = 1
-cursor.Visible = false
-cursor.ZIndex = 10
-cursor.Parent = gui
-
--- Criar botões
+-- BOTÕES DE CURSOR
 local function createCursorButton(text, image, y)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, -30, 0, 48)
@@ -144,7 +185,6 @@ local function createCursorButton(text, image, y)
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.Font = Enum.Font.GothamSemibold
     button.TextSize = 14
-    button.AutoButtonColor = true
     button.Parent = main
 
     local corner = Instance.new("UICorner")
@@ -161,8 +201,8 @@ local function createCursorButton(text, image, y)
     button.MouseButton1Click:Connect(function()
         selectedCursor = image
         cursor.Image = image
-        cursor.Visible = true
-        UIS.MouseIconEnabled = false
+        cursor.Size = UDim2.fromOffset(cursorSize, cursorSize)
+        updateCursorMode()
     end)
 
     return button
@@ -171,10 +211,75 @@ end
 createCursorButton("Diamond Sword", SWORD_ID, 115)
 createCursorButton("White Cross", CROSS_ID, 173)
 
--- Restaurar cursor original
+-- CONTROLE DE TAMANHO
+local sizeTitle = Instance.new("TextLabel")
+sizeTitle.Size = UDim2.new(1, -30, 0, 25)
+sizeTitle.Position = UDim2.fromOffset(15, 230)
+sizeTitle.BackgroundTransparency = 1
+sizeTitle.Text = "TAMANHO DO CURSOR"
+sizeTitle.TextColor3 = Color3.fromRGB(190, 190, 190)
+sizeTitle.Font = Enum.Font.GothamBold
+sizeTitle.TextSize = 12
+sizeTitle.TextXAlignment = Enum.TextXAlignment.Left
+sizeTitle.Parent = main
+
+local sizeDisplay = Instance.new("TextLabel")
+sizeDisplay.Size = UDim2.fromOffset(55, 35)
+sizeDisplay.Position = UDim2.new(0.5, -27, 0, 258)
+sizeDisplay.BackgroundTransparency = 1
+sizeDisplay.Text = tostring(cursorSize)
+sizeDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
+sizeDisplay.Font = Enum.Font.GothamBold
+sizeDisplay.TextSize = 17
+sizeDisplay.Parent = main
+
+local function createSizeButton(text, position)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.fromOffset(42, 35)
+    button.Position = position
+    button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 20
+    button.Parent = main
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 7)
+    corner.Parent = button
+
+    return button
+end
+
+local decreaseButton = createSizeButton(
+    "−",
+    UDim2.new(0.5, -75, 0, 258)
+)
+
+local increaseButton = createSizeButton(
+    "+",
+    UDim2.new(0.5, 33, 0, 258)
+)
+
+local function updateSize()
+    cursor.Size = UDim2.fromOffset(cursorSize, cursorSize)
+    sizeDisplay.Text = tostring(cursorSize)
+end
+
+decreaseButton.MouseButton1Click:Connect(function()
+    cursorSize = math.max(MIN_SIZE, cursorSize - SIZE_STEP)
+    updateSize()
+end)
+
+increaseButton.MouseButton1Click:Connect(function()
+    cursorSize = math.min(MAX_SIZE, cursorSize + SIZE_STEP)
+    updateSize()
+end)
+
+-- RESTAURAR CURSOR
 local restore = Instance.new("TextButton")
-restore.Size = UDim2.new(1, -30, 0, 40)
-restore.Position = UDim2.fromOffset(15, 235)
+restore.Size = UDim2.new(1, -30, 0, 38)
+restore.Position = UDim2.fromOffset(15, 302)
 restore.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 restore.Text = "Restaurar cursor original"
 restore.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -188,42 +293,34 @@ restoreCorner.Parent = restore
 
 restore.MouseButton1Click:Connect(function()
     selectedCursor = nil
-    cursor.Visible = false
-    UIS.MouseIconEnabled = originalMouseIconEnabled
-    UIS.MouseBehavior = originalMouseBehavior
-    centerLocked = false
+    updateCursorMode()
 end)
 
--- Abrir/fechar menu com RightShift
+-- ABRIR E FECHAR MENU
 local function setMenuOpen(open)
     menuOpen = open
     main.Visible = open
-
-    if open then
-        UIS.MouseBehavior = Enum.MouseBehavior.Default
-        centerLocked = false
-    elseif selectedCursor then
-        UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
-        centerLocked = true
-    end
+    updateCursorMode()
 end
 
-UIS.InputBegan:Connect(function(input, processed)
-    if processed then return end
+closeButton.MouseButton1Click:Connect(function()
+    setMenuOpen(false)
+end)
 
+UIS.InputBegan:Connect(function(input, processed)
     if input.KeyCode == Enum.KeyCode.RightShift then
         setMenuOpen(not menuOpen)
     end
 end)
 
--- Manter o cursor visual no centro
+-- MANTER CURSOR NO CENTRO
 RunService.RenderStepped:Connect(function()
     if cursor.Visible then
         cursor.Position = UDim2.fromScale(0.5, 0.5)
     end
 end)
 
--- Libera o mouse ao remover o script
+-- LIMPEZA
 script.Destroying:Connect(function()
     UIS.MouseIconEnabled = originalMouseIconEnabled
     UIS.MouseBehavior = originalMouseBehavior
